@@ -1,0 +1,13 @@
+/* Couleur or élégante */
+:has(:root) {
+  --lumo-primary-color: #d4af37;
+  --lumo-primary-color-50pct: rgba(212, 175, 55, 0.5);
+  --lumo-primary-text-color: #d4af37;
+}
+
+/* Bouton inscription noir + or */
+.vaadin-button[theme~="primary"] {
+  background: black !important;
+  color: #d4af37 !important;
+  border: 2px solid #d4af37;
+}
