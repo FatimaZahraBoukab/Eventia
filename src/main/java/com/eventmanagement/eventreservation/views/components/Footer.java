@@ -178,9 +178,9 @@ public class Footer extends Div {
         contactList.getStyle().set("gap", "12px");
         
         contactList.add(
-            createContactItem("phone", "+33 1 23 45 67 89"),
+            createContactItem("phone", "+212 6 11 95 58 23"),
             createContactItem("email", "contact@eventia.com"),
-            createContactItem("location", "Paris, France")
+            createContactItem("location", "Tanger, Maroc")
         );
         
         column.add(title, contactList);
