@@ -181,6 +181,7 @@ public class LoginView extends Div {
                 .set("box-shadow", "0 4px 15px #c9a961)");
         });
         
+        // ⭐⭐⭐ SECTION MODIFIÉE - LOGIQUE DE CONNEXION ⭐⭐⭐
         loginButton.addClickListener(e -> {
             String email = emailField.getValue();
             String password = passwordField.getValue();
@@ -194,9 +195,18 @@ public class LoginView extends Div {
                 Optional<User> user = userService.authenticate(email, password);
                 
                 if (user.isPresent()) {
-                    VaadinSession.getCurrent().setAttribute(User.class, user.get());
+                    User authenticatedUser = user.get();
+                    
+                    // ✅ CODE EXISTANT (GARDÉ)
+                    VaadinSession.getCurrent().setAttribute(User.class, authenticatedUser);
+                    
+                    // ⭐ NOUVEAU CODE AJOUTÉ (3 LIGNES)
+                    VaadinSession.getCurrent().setAttribute("userId", authenticatedUser.getId());
+                    VaadinSession.getCurrent().setAttribute("userRole", authenticatedUser.getRole().name());
+                    VaadinSession.getCurrent().setAttribute("userEmail", authenticatedUser.getEmail());
+                    
                     showNotification("Connexion réussie ! Bienvenue", NotificationVariant.LUMO_SUCCESS);
-                    redirectByRole(user.get().getRole());
+                    redirectByRole(authenticatedUser.getRole());
                 } else {
                     showNotification("Nom d'utilisateur ou mot de passe incorrect", NotificationVariant.LUMO_ERROR);
                 }
@@ -209,6 +219,7 @@ public class LoginView extends Div {
                 }
             }
         });
+        // ⭐⭐⭐ FIN DE LA SECTION MODIFIÉE ⭐⭐⭐
         
         // Lien créer un compte
         Div registerLinkDiv = new Div();
