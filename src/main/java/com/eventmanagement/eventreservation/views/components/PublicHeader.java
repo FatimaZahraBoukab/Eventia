@@ -66,7 +66,7 @@ public class PublicHeader extends Div {
         // Créer les liens de navigation
         centerContainer.add(createNavLink("Accueil", "hero"));
         centerContainer.add(createNavLink("À propos", "about"));
-        centerContainer.add(createNavLink("Nos services", "services"));
+        centerContainer.add(createNavLink("Nos événements", "services"));
         centerContainer.add(createNavLink("Avis", "avis"));
         centerContainer.add(createNavLink("Contact", "contact"));
 

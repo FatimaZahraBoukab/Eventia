@@ -67,7 +67,7 @@ public class AvisSection extends Div {
             .set("line-height", "1.2")
             .set("text-align", "center");
         
-        Paragraph subtitle = new Paragraph("Découvrez les expériences de ceux qui ont transformé leurs événements avec Eventia");
+        Paragraph subtitle = new Paragraph("Découvrez l'avis de ceux qui vivent leurs meilleurs événements grâce à Eventia");
         subtitle.getStyle()
             .set("font-size", "1rem")
             .set("color", "#666")
@@ -95,8 +95,8 @@ public class AvisSection extends Div {
         // Témoignage 1
         grid.add(createTestimonialCard(
             "Sophia Alaoui",
-            "Organisatrice d'événements",
-            "Eventia a révolutionné notre gestion d'événements. La plateforme de réservation est intuitive et nous permet de gérer facilement plusieurs événements simultanément.",
+            "Participante événementielle",
+            "Eventia nous permet de réserver rapidement des conférences et spectacles déjà organisés. La plateforme est simple à utiliser et offre un large choix d’événements.",
             5,
             "images/avis1.jpg"
         ));
@@ -105,7 +105,7 @@ public class AvisSection extends Div {
         grid.add(createTestimonialCard(
             "Hassan Benjelloun",
             "Directeur Marketing",
-            "Nous organisons régulièrement des conférences et séminaires. Avec Eventia, la gestion des réservations est devenue simple et efficace. Nos participants apprécient la facilité de réservation en ligne.",
+            "Grâce à Eventia, nous réservons facilement des séminaires et événements professionnels. Les informations sont claires, les réservations instantanées et le suivi très pratique. Un vrai gain de temps .",
             4.5,
             "images/avis2.jpg"
         ));
@@ -114,7 +114,7 @@ public class AvisSection extends Div {
         grid.add(createTestimonialCard(
             "Karima Aatar",
             "Chef d'entreprise",
-            "Pour nos événements corporate, Eventia est devenu indispensable. Le suivi des réservations en temps réel et la gestion simplifiée nous font gagner un temps précieux. Je recommande vivement !",
+            "Eventia est devenue notre solution principale pour réserver des galas et festivals. Le catalogue d’événements est riche et bien organisé . Je recommande vivement !",
             5,
             "images/avis3.jpg"
         ));

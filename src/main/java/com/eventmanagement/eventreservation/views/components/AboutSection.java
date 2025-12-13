@@ -46,17 +46,13 @@ public class AboutSection extends Div {
         mainTitle.addClassName("main-title");
         
         // Sous-titre avec style doré
-        H3 subtitle = new H3("Innovation, excellence & personnalisation");
+        H3 subtitle = new H3("Expérience fluide & Réservation facile ");
         subtitle.addClassName("subtitle");
         
         // Paragraphe descriptif
         Paragraph description = new Paragraph();
         description.setText(
-            "Eventia, votre partenaire événementiel, révolutionne l'expérience professionnelle par " +
-            "son innovation. Nous conjuguons expertise, qualité et réactivité pour sublimer chaque " +
-            "rencontre. Des séminaires aux lancements de produits, nos solutions sur-mesure enchantent " +
-            "vos événements. Avec Eventia, transformez vos idées en moments inoubliables, où créativité " +
-            "et excellence se rencontrent."
+            "Eventia est une plateforme intelligente dédiée à la réservation d’événements. Elle simplifie l’accès aux conférences, galas, spectacles et rencontres culturelles en quelques clics. Grâce à une expérience fluide et moderne, Eventia connecte le public aux meilleurs événements. Notre mission est de rendre chaque réservation rapide, fiable et agréable, afin de vivre des moments uniques et mémorables en toute simplicité."
         );
         description.addClassName("description");
         

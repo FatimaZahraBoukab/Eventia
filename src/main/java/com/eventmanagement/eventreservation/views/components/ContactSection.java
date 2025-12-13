@@ -1,5 +1,7 @@
 package com.eventmanagement.eventreservation.views.components;
 
+import com.eventmanagement.eventreservation.entity.ContactMessage;
+import com.eventmanagement.eventreservation.service.ContactMessageService;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H2;
@@ -12,6 +14,7 @@ import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * Section Contact - Design Eventia
@@ -19,7 +22,12 @@ import com.vaadin.flow.component.notification.NotificationVariant;
  */
 public class ContactSection extends Div {
     
-    public ContactSection() {
+    @Autowired
+    private ContactMessageService contactMessageService;
+    
+    public ContactSection(ContactMessageService contactMessageService) {
+        this.contactMessageService = contactMessageService;
+        
         addClassName("contact-section");
         setId("contact");
         setWidth("100%");
@@ -294,19 +302,40 @@ public class ContactSection extends Div {
             return;
         }
         
-        // Simulation d'envoi réussi
-        Notification notification = Notification.show(
-            "✓ Votre message a été envoyé avec succès ! Nous vous répondrons dans les plus brefs délais.",
-            4000,
-            Notification.Position.TOP_CENTER
-        );
-        notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
-        
-        // Réinitialiser le formulaire
-        nameField.clear();
-        emailField.clear();
-        subjectField.clear();
-        messageField.clear();
+        try {
+            // Créer et enregistrer le message dans la base de données
+            ContactMessage contactMessage = new ContactMessage(
+                nameField.getValue(),
+                emailField.getValue(),
+                subjectField.getValue(),
+                messageField.getValue()
+            );
+            
+            contactMessageService.saveMessage(contactMessage);
+            
+            // Notification de succès
+            Notification notification = Notification.show(
+                "✓ Votre message a été envoyé avec succès ! Nous vous répondrons dans les plus brefs délais.",
+                4000,
+                Notification.Position.TOP_CENTER
+            );
+            notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+            
+            // Réinitialiser le formulaire
+            nameField.clear();
+            emailField.clear();
+            subjectField.clear();
+            messageField.clear();
+            
+        } catch (Exception ex) {
+            // Gestion des erreurs
+            Notification notification = Notification.show(
+                "Une erreur s'est produite lors de l'envoi du message. Veuillez réessayer.",
+                3000,
+                Notification.Position.TOP_CENTER
+            );
+            notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+        }
     }
     
     private void addStyles() {

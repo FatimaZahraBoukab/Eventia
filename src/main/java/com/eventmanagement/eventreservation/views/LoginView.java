@@ -16,6 +16,7 @@ import com.vaadin.flow.router.RouterLink;
 import com.vaadin.flow.server.VaadinSession;
 
 import java.util.Optional;
+
 @SuppressWarnings("unused")
 @Route("login")
 public class LoginView extends Div {
@@ -28,7 +29,7 @@ public class LoginView extends Div {
         setWidthFull();
         setHeightFull();
         getStyle()
-             .set("background-image", "url('images/hero1.webp')")  // votre image ici
+             .set("background-image", "url('images/hero1.webp')")
              .set("background-size", "cover")
              .set("background-position", "center")
              .set("background-repeat", "no-repeat")
@@ -41,11 +42,6 @@ public class LoginView extends Div {
              .set("top", "0")
              .set("left", "0")
              .set("overflow", "hidden");
-
-
-
-             
-    
         
         // Formes décoratives arrière-plan
         Div decorativeShapes = new Div();
@@ -123,7 +119,7 @@ public class LoginView extends Div {
         
         // Champ Email / Nom d'utilisateur
         EmailField emailField = new EmailField();
-        emailField.setPlaceholder("Nom d’utilisateur");
+        emailField.setPlaceholder("Nom d'utilisateur");
         emailField.setWidthFull();
         emailField.getStyle()
             .set("--lumo-border-radius", "25px")
@@ -133,7 +129,6 @@ public class LoginView extends Div {
             .set("padding-left", "5px")
             .set("--vaadin-input-field-background", "#F0F0F0")
             .set("--vaadin-input-field-border-radius", "15px");
-            
         
         emailField.getElement().executeJs(
             "this.shadowRoot.querySelector('[part=\"input-field\"]').style.paddingLeft = '40px';"
@@ -195,17 +190,25 @@ public class LoginView extends Div {
                 return;
             }
             
-            Optional<User> user = userService.authenticate(email, password);
-            
-            if (user.isPresent()) {
-                VaadinSession.getCurrent().setAttribute(User.class, user.get());
-                showNotification("Connexion réussie ! Bienvenue", NotificationVariant.LUMO_SUCCESS);
-                redirectByRole(user.get().getRole());
-            } else {
-                showNotification("Nom d’utilisateur ou mot de passe incorrect", NotificationVariant.LUMO_ERROR);
+            try {
+                Optional<User> user = userService.authenticate(email, password);
+                
+                if (user.isPresent()) {
+                    VaadinSession.getCurrent().setAttribute(User.class, user.get());
+                    showNotification("Connexion réussie ! Bienvenue", NotificationVariant.LUMO_SUCCESS);
+                    redirectByRole(user.get().getRole());
+                } else {
+                    showNotification("Nom d'utilisateur ou mot de passe incorrect", NotificationVariant.LUMO_ERROR);
+                }
+            } catch (RuntimeException ex) {
+                // Gérer l'erreur de compte désactivé
+                if (ex.getMessage().contains("désactivé")) {
+                    showNotification(ex.getMessage(), NotificationVariant.LUMO_ERROR, 5000);
+                } else {
+                    showNotification("Erreur de connexion", NotificationVariant.LUMO_ERROR);
+                }
             }
         });
-        
         
         // Lien créer un compte
         Div registerLinkDiv = new Div();
@@ -250,7 +253,11 @@ public class LoginView extends Div {
     }
     
     private void showNotification(String message, NotificationVariant variant) {
-        Notification notification = new Notification(message, 3000);
+        showNotification(message, variant, 3000);
+    }
+    
+    private void showNotification(String message, NotificationVariant variant, int duration) {
+        Notification notification = new Notification(message, duration);
         notification.addThemeVariants(variant);
         notification.setPosition(Notification.Position.TOP_CENTER);
         notification.open();
