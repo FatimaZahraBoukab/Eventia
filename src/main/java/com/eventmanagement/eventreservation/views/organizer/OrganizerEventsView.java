@@ -1,7 +1,7 @@
 package com.eventmanagement.eventreservation.views.organizer;
 
-import com.eventmanagement.eventreservation.views.organizer.EventForm;
 import com.eventmanagement.eventreservation.entity.Event;
+import com.eventmanagement.eventreservation.entity.EventCategory;
 import com.eventmanagement.eventreservation.entity.EventStatus;
 import com.eventmanagement.eventreservation.entity.User;
 import com.eventmanagement.eventreservation.service.EventService;
@@ -11,11 +11,14 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
+import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H2;
+
+import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
@@ -23,12 +26,15 @@ import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.textfield.NumberField;
+import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.VaadinSession;
 import jakarta.annotation.security.RolesAllowed;
 
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Route("organizer/events")
 @RolesAllowed("ORGANIZER")
@@ -39,7 +45,18 @@ public class OrganizerEventsView extends Div {
     
     private User currentUser;
     private Grid<Event> grid;
+    
+    // Filtres multiples
     private ComboBox<EventStatus> statusFilter;
+    private ComboBox<EventCategory> categoryFilter;
+    private TextField lieuFilter;
+    private TextField villeFilter;
+    private NumberField prixMinFilter;
+    private NumberField prixMaxFilter;
+    private DatePicker dateDebutFilter;
+    private DatePicker dateFinFilter;
+    private Button clearFiltersButton;
+    
     private EventForm form;
     private Dialog formDialog;
     
@@ -87,8 +104,8 @@ public class OrganizerEventsView extends Div {
         // Header avec titre et bouton
         HorizontalLayout header = createHeader();
         
-        // Filtre par statut
-        HorizontalLayout filterLayout = createFilterLayout();
+        // Filtres multiples
+        Div filtersSection = createFiltersSection();
         
         // Grille des événements
         configureGrid();
@@ -96,7 +113,7 @@ public class OrganizerEventsView extends Div {
         // Formulaire dans un dialog
         configureForm();
         
-        mainContent.add(header, filterLayout, grid);
+        mainContent.add(header, filtersSection, grid);
         add(sidebar, mainContent);
         
         updateGrid();
@@ -105,16 +122,37 @@ public class OrganizerEventsView extends Div {
     private HorizontalLayout createHeader() {
         H2 title = new H2("Mes Événements");
         title.getStyle()
-            .set("color", "#333333")
+            .set("color", "#2C3E50")
             .set("margin", "0")
-            .set("font-size", "28px")
-            .set("font-weight", "700");
+            .set("font-size", "32px")
+            .set("font-weight", "700")
+            .set("letter-spacing", "-0.5px");
         
         Button createButton = new Button("Créer un événement", new Icon(VaadinIcon.PLUS));
         createButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         createButton.getStyle()
-            .set("background-color", "#4CAF50")
-            .set("border-radius", "8px");
+            .set("background", "linear-gradient(135deg, #C8A050 0%, #D4AF6A 100%)")
+            .set("color", "#FFFFFF")
+            .set("border", "none")
+            .set("border-radius", "25px")
+            .set("padding", "12px 24px")
+            .set("font-weight", "600")
+            .set("box-shadow", "0 4px 15px rgba(200, 160, 80, 0.3)")
+            .set("cursor", "pointer")
+            .set("transition", "all 0.3s ease");
+        
+        createButton.getElement().addEventListener("mouseenter", e -> {
+            createButton.getStyle()
+                .set("transform", "translateY(-2px)")
+                .set("box-shadow", "0 6px 20px rgba(200, 160, 80, 0.4)");
+        });
+        
+        createButton.getElement().addEventListener("mouseleave", e -> {
+            createButton.getStyle()
+                .set("transform", "translateY(0)")
+                .set("box-shadow", "0 4px 15px rgba(200, 160, 80, 0.3)");
+        });
+        
         createButton.addClickListener(e -> openFormForNewEvent());
         
         HorizontalLayout header = new HorizontalLayout(title, createButton);
@@ -126,25 +164,182 @@ public class OrganizerEventsView extends Div {
         return header;
     }
     
-    private HorizontalLayout createFilterLayout() {
-        statusFilter = new ComboBox<>("Filtrer par statut");
+    private Div createFiltersSection() {
+        Div filtersContainer = new Div();
+        filtersContainer.getStyle()
+            .set("background", "#ffffff")
+            .set("padding", "25px")
+            .set("border-radius", "16px")
+            .set("box-shadow", "0 4px 20px rgba(0,0,0,0.08)")
+            .set("border", "1px solid #e8e8e8")
+            .set("margin-bottom", "20px");
+        
+    
+        
+        // Ligne 1: Statut, Catégorie, ville
+        HorizontalLayout row1 = new HorizontalLayout();
+        row1.setWidthFull();
+        row1.getStyle().set("gap", "15px");
+        
+        statusFilter = new ComboBox<>("Statut");
         statusFilter.setItems(EventStatus.values());
         statusFilter.setItemLabelGenerator(EventStatus::getDisplayName);
         statusFilter.setPlaceholder("Tous les statuts");
         statusFilter.setClearButtonVisible(true);
-        statusFilter.setWidth("250px");
+        statusFilter.setWidth("200px");
+        statusFilter.getStyle().set("--lumo-primary-color", "#C8A050");
+        statusFilter.addValueChangeListener(e -> applyFilters());
         
-        statusFilter.addValueChangeListener(e -> updateGrid());
+        categoryFilter = new ComboBox<>("Catégorie");
+        categoryFilter.setItems(EventCategory.values());
+        categoryFilter.setItemLabelGenerator(EventCategory::getDisplayName);
+        categoryFilter.setPlaceholder("Toutes les catégories");
+        categoryFilter.setClearButtonVisible(true);
+        categoryFilter.setWidth("200px");
+        categoryFilter.getStyle().set("--lumo-primary-color", "#C8A050");
+        categoryFilter.addValueChangeListener(e -> applyFilters());
+
+        villeFilter = new TextField("Ville");
+        villeFilter.setPlaceholder("Rechercher par ville...");
+        villeFilter.setClearButtonVisible(true);
+        villeFilter.setWidth("250px");
+        villeFilter.getStyle().set("--lumo-primary-color", "#C8A050");
+        villeFilter.addValueChangeListener(e -> applyFilters());
         
-        HorizontalLayout filterLayout = new HorizontalLayout(statusFilter);
-        filterLayout.getStyle().set("margin-bottom", "20px");
+ prixMinFilter = new NumberField("Prix min (DH)");
+        prixMinFilter.setPlaceholder("0");
+        prixMinFilter.setClearButtonVisible(true);
+        prixMinFilter.setWidth("150px");
+        prixMinFilter.setMin(0);
+        prixMinFilter.getStyle().set("--lumo-primary-color", "#C8A050");
+        prixMinFilter.addValueChangeListener(e -> applyFilters());
         
-        return filterLayout;
+        prixMaxFilter = new NumberField("Prix max (DH)");
+        prixMaxFilter.setPlaceholder("10000");
+        prixMaxFilter.setClearButtonVisible(true);
+        prixMaxFilter.setWidth("150px");
+        prixMaxFilter.setMin(0);
+        prixMaxFilter.getStyle().set("--lumo-primary-color", "#C8A050");
+        prixMaxFilter.addValueChangeListener(e -> applyFilters());
+
+        // Bouton pour effacer tous les filtres
+        clearFiltersButton = new Button("Réinitialiser les filtres", new Icon(VaadinIcon.REFRESH));
+        clearFiltersButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+        clearFiltersButton.getStyle()
+            .set("color", "#C8A050")
+            .set("cursor", "pointer")
+            .set("margin-left", "auto");
+        clearFiltersButton.addClickListener(e -> clearAllFilters());
+        
+        row1.add(statusFilter, categoryFilter, villeFilter , prixMinFilter ,prixMaxFilter ,clearFiltersButton);
+        
+       
+    
+        
+        filtersContainer.add( row1 );
+        return filtersContainer;
+    }
+    
+    private void applyFilters() {
+        List<Event> events = eventService.findByOrganisateur(currentUser);
+        
+        // Filtrer par statut
+        if (statusFilter.getValue() != null) {
+            events = events.stream()
+                .filter(e -> e.getStatut() == statusFilter.getValue())
+                .collect(Collectors.toList());
+        }
+        
+        // Filtrer par catégorie
+        if (categoryFilter.getValue() != null) {
+            events = events.stream()
+                .filter(e -> e.getCategorie() == categoryFilter.getValue())
+                .collect(Collectors.toList());
+        }
+        
+       
+        
+        // Filtrer par ville
+        if (villeFilter.getValue() != null && !villeFilter.getValue().trim().isEmpty()) {
+            String villeSearch = villeFilter.getValue().toLowerCase().trim();
+            events = events.stream()
+                .filter(e -> e.getVille().toLowerCase().contains(villeSearch))
+                .collect(Collectors.toList());
+        }
+        
+        // Filtrer par prix minimum
+        if (prixMinFilter.getValue() != null) {
+            double prixMin = prixMinFilter.getValue();
+            events = events.stream()
+                .filter(e -> e.getPrixUnitaire() >= prixMin)
+                .collect(Collectors.toList());
+        }
+        
+        // Filtrer par prix maximum
+        if (prixMaxFilter.getValue() != null) {
+            double prixMax = prixMaxFilter.getValue();
+            events = events.stream()
+                .filter(e -> e.getPrixUnitaire() <= prixMax)
+                .collect(Collectors.toList());
+        
+        grid.setItems(events);
+        grid.setVisible(!events.isEmpty()); }
+    }
+    
+    private void clearAllFilters() {
+        statusFilter.clear();
+        categoryFilter.clear();
+        lieuFilter.clear();
+        villeFilter.clear();
+        prixMinFilter.clear();
+        prixMaxFilter.clear();
+        dateDebutFilter.clear();
+        dateFinFilter.clear();
+        
+        updateGrid();
+        
+        Notification.show("Filtres réinitialisés", 2000, Notification.Position.BOTTOM_START)
+            .addThemeVariants(NotificationVariant.LUMO_SUCCESS);
     }
     
     private void configureGrid() {
         grid = new Grid<>(Event.class, false);
         grid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES, GridVariant.LUMO_WRAP_CELL_CONTENT);
+        grid.setHeight("auto");
+        grid.setAllRowsVisible(true);
+        
+        // Colonne Image
+        grid.addComponentColumn(event -> {
+            if (event.getImagePath() != null && !event.getImagePath().isEmpty()) {
+                Image img = new Image(event.getImagePath(), "Image événement");
+                img.setWidth("80px");
+                img.setHeight("60px");
+                img.getStyle()
+                    .set("object-fit", "cover")
+                    .set("border-radius", "8px")
+                    .set("box-shadow", "0 2px 8px rgba(0,0,0,0.1)");
+                return img;
+            } else {
+                Div emptyDiv = new Div();
+                emptyDiv.setWidth("80px");
+                emptyDiv.setHeight("60px");
+                emptyDiv.getStyle()
+                    .set("background", "linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%)")
+                    .set("border-radius", "8px")
+                    .set("display", "flex")
+                    .set("align-items", "center")
+                    .set("justify-content", "center")
+                    .set("border", "2px dashed #C8A050");
+                
+                Span noImageIcon = new Span("🖼️");
+                noImageIcon.getStyle()
+                    .set("font-size", "24px")
+                    .set("opacity", "0.4");
+                
+                emptyDiv.add(noImageIcon);
+                return emptyDiv;
+            }
+        }).setHeader("Image").setWidth("100px").setFlexGrow(0);
         
         // Colonne Titre
         grid.addColumn(Event::getTitre)
@@ -173,18 +368,24 @@ public class OrganizerEventsView extends Div {
             Div container = new Div();
             
             Span capacityText = new Span(event.getCapaciteMax() + " places");
-            capacityText.getStyle().set("font-weight", "600");
+            capacityText.getStyle()
+                .set("font-weight", "600")
+                .set("color", "#555555");
             
             container.add(capacityText);
             return container;
         }).setHeader("Capacité").setAutoWidth(true);
         
         // Colonne Prix
-        grid.addColumn(event -> String.format("%.2f DH", event.getPrixUnitaire()))
-            .setHeader("Prix")
-            .setAutoWidth(true);
+        grid.addComponentColumn(event -> {
+            Span priceSpan = new Span(String.format("%.2f DH", event.getPrixUnitaire()));
+            priceSpan.getStyle()
+                .set("font-weight", "600")
+                .set("color", "#C8A050");
+            return priceSpan;
+        }).setHeader("Prix").setAutoWidth(true);
         
-        // Colonne Statut avec badge coloré
+        // Colonne Statut
         grid.addComponentColumn(event -> createStatusBadge(event.getStatut()))
             .setHeader("Statut")
             .setAutoWidth(true);
@@ -197,38 +398,46 @@ public class OrganizerEventsView extends Div {
         
         grid.getStyle()
             .set("background", "#ffffff")
-            .set("border-radius", "12px")
-            .set("box-shadow", "0 2px 10px rgba(0,0,0,0.08)");
+            .set("border-radius", "16px")
+            .set("box-shadow", "0 4px 20px rgba(0,0,0,0.08)")
+            .set("border", "1px solid #e8e8e8")
+            .set("overflow", "visible");
     }
     
     private Span createStatusBadge(EventStatus status) {
         Span badge = new Span(status.getDisplayName());
         badge.getStyle()
-            .set("padding", "4px 12px")
-            .set("border-radius", "12px")
-            .set("font-size", "12px")
-            .set("font-weight", "600");
+            .set("padding", "6px 16px")
+            .set("border-radius", "20px")
+            .set("font-size", "13px")
+            .set("font-weight", "600")
+            .set("text-transform", "uppercase")
+            .set("letter-spacing", "0.5px");
         
         switch (status) {
             case PUBLIE:
                 badge.getStyle()
-                    .set("background-color", "#e8f5e9")
-                    .set("color", "#2e7d32");
+                    .set("background", "linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%)")
+                    .set("color", "#155724")
+                    .set("border", "1px solid #c3e6cb");
                 break;
             case BROUILLON:
                 badge.getStyle()
-                    .set("background-color", "#fff3e0")
-                    .set("color", "#f57c00");
+                    .set("background", "linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%)")
+                    .set("color", "#856404")
+                    .set("border", "1px solid #ffeaa7");
                 break;
             case ANNULE:
                 badge.getStyle()
-                    .set("background-color", "#ffebee")
-                    .set("color", "#c62828");
+                    .set("background", "linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%)")
+                    .set("color", "#721c24")
+                    .set("border", "1px solid #f5c6cb");
                 break;
             case TERMINE:
                 badge.getStyle()
-                    .set("background-color", "#e0e0e0")
-                    .set("color", "#616161");
+                    .set("background", "linear-gradient(135deg, #e2e3e5 0%, #d6d8db 100%)")
+                    .set("color", "#383d41")
+                    .set("border", "1px solid #d6d8db");
                 break;
         }
         
@@ -239,27 +448,40 @@ public class OrganizerEventsView extends Div {
         Button editButton = new Button(new Icon(VaadinIcon.EDIT));
         editButton.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY);
         editButton.getElement().setAttribute("title", "Modifier");
+        editButton.getStyle()
+            .set("color", "#C8A050")
+            .set("cursor", "pointer");
         editButton.addClickListener(e -> openFormForEdit(event));
         
         Button publishButton = new Button(new Icon(VaadinIcon.CHECK_CIRCLE));
-        publishButton.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_SUCCESS, ButtonVariant.LUMO_TERTIARY);
+        publishButton.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY);
         publishButton.getElement().setAttribute("title", "Publier");
         publishButton.setVisible(event.getStatut() == EventStatus.BROUILLON);
+        publishButton.getStyle()
+            .set("color", "#28a745")
+            .set("cursor", "pointer");
         publishButton.addClickListener(e -> confirmPublish(event));
         
         Button cancelButton = new Button(new Icon(VaadinIcon.CLOSE_CIRCLE));
-        cancelButton.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_ERROR, ButtonVariant.LUMO_TERTIARY);
+        cancelButton.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY);
         cancelButton.getElement().setAttribute("title", "Annuler");
         cancelButton.setVisible(event.getStatut() == EventStatus.PUBLIE);
+        cancelButton.getStyle()
+            .set("color", "#dc3545")
+            .set("cursor", "pointer");
         cancelButton.addClickListener(e -> confirmCancel(event));
         
         Button deleteButton = new Button(new Icon(VaadinIcon.TRASH));
-        deleteButton.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_ERROR, ButtonVariant.LUMO_TERTIARY);
+        deleteButton.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY);
         deleteButton.getElement().setAttribute("title", "Supprimer");
+        deleteButton.getStyle()
+            .set("color", "#dc3545")
+            .set("cursor", "pointer");
         deleteButton.addClickListener(e -> confirmDelete(event));
         
         HorizontalLayout actions = new HorizontalLayout(editButton, publishButton, cancelButton, deleteButton);
         actions.setSpacing(false);
+        actions.getStyle().set("gap", "8px");
         
         return actions;
     }
@@ -300,13 +522,6 @@ public class OrganizerEventsView extends Div {
         try {
             Event eventToSave = event.getEvent();
             
-            // Sauvegarder l'image si elle a été uploadée
-            if (event.getFileName() != null && event.getFileStream() != null) {
-                String imagePath = eventService.saveEventImage(event.getFileName(), event.getFileStream());
-                eventToSave.setImagePath(imagePath);
-            }
-            
-            // Créer ou mettre à jour l'événement
             if (eventToSave.getId() == null) {
                 eventService.createEvent(eventToSave);
                 Notification.show("Événement créé avec succès!", 3000, Notification.Position.BOTTOM_START)
@@ -409,14 +624,7 @@ public class OrganizerEventsView extends Div {
     }
     
     private void updateGrid() {
-        List<Event> events;
-        
-        if (statusFilter.getValue() != null) {
-            events = eventService.findByOrganisateurAndStatut(currentUser, statusFilter.getValue());
-        } else {
-            events = eventService.findByOrganisateur(currentUser);
-        }
-        
+        List<Event> events = eventService.findByOrganisateur(currentUser);
         grid.setItems(events);
         grid.setVisible(!events.isEmpty());
     }

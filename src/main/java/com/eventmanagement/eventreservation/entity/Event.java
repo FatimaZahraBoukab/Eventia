@@ -23,7 +23,7 @@ public class Event {
     
     @NotNull(message = "La catégorie est obligatoire")
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, length = 50)  // ✅ Ajout de length = 50 pour accepter toutes les valeurs
     private EventCategory categorie;
     
     @NotNull(message = "La date de début est obligatoire")
@@ -60,7 +60,7 @@ public class Event {
     
     @NotNull
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, length = 50)  // ✅ Ajout de length = 50
     private EventStatus statut = EventStatus.BROUILLON;
     
     @Column(nullable = false, updatable = false)

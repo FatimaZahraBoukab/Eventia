@@ -10,8 +10,6 @@ import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.datetimepicker.DateTimePicker;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.H3;
-import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -19,13 +17,9 @@ import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
-import com.vaadin.flow.component.upload.Upload;
-import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.binder.ValidationException;
 import com.vaadin.flow.shared.Registration;
-
-import java.io.InputStream;
 
 public class EventForm extends Div {
     
@@ -42,13 +36,7 @@ public class EventForm extends Div {
     private TextField ville = new TextField("Ville");
     private IntegerField capaciteMax = new IntegerField("Capacité maximale");
     private NumberField prixUnitaire = new NumberField("Prix unitaire (DH)");
-    
-    // Upload d'image
-    private MemoryBuffer buffer = new MemoryBuffer();
-    private Upload upload = new Upload(buffer);
-    private Image imagePreview = new Image();
-    private String uploadedFileName;
-    private InputStream uploadedFileStream;
+    private TextField imageUrl = new TextField("URL de l'image (optionnel)");
     
     // Boutons
     private Button saveButton = new Button("Enregistrer");
@@ -58,7 +46,6 @@ public class EventForm extends Div {
         addClassName("event-form");
         
         configureFields();
-        configureUpload();
         configureBinder();
         
         FormLayout formLayout = new FormLayout();
@@ -68,7 +55,7 @@ public class EventForm extends Div {
             lieu, ville,
             capaciteMax, prixUnitaire,
             description,
-            createUploadSection()
+            imageUrl
         );
         
         formLayout.setResponsiveSteps(
@@ -77,7 +64,7 @@ public class EventForm extends Div {
         );
         
         formLayout.setColspan(description, 2);
-        formLayout.setColspan(createUploadSection(), 2);
+        formLayout.setColspan(imageUrl, 2);
         
         HorizontalLayout buttons = createButtonsLayout();
         
@@ -115,50 +102,10 @@ public class EventForm extends Div {
         prixUnitaire.setMin(0);
         prixUnitaire.setStep(0.01);
         prixUnitaire.setPlaceholder("Ex: 150.00");
-    }
-    
-    private void configureUpload() {
-        upload.setAcceptedFileTypes("image/jpeg", "image/png", "image/jpg");
-        upload.setMaxFiles(1);
-        upload.setMaxFileSize(5 * 1024 * 1024); // 5MB
         
-        upload.addSucceededListener(event -> {
-            uploadedFileName = event.getFileName();
-            uploadedFileStream = buffer.getInputStream();
-            
-            Notification.show("Image téléchargée avec succès", 3000, Notification.Position.BOTTOM_START)
-                .addThemeVariants(NotificationVariant.LUMO_SUCCESS);
-        });
-        
-        upload.addFileRejectedListener(event -> {
-            Notification.show("Erreur: " + event.getErrorMessage(), 3000, Notification.Position.BOTTOM_START)
-                .addThemeVariants(NotificationVariant.LUMO_ERROR);
-        });
-    }
-    
-    private Div createUploadSection() {
-        Div uploadSection = new Div();
-        uploadSection.getStyle()
-            .set("display", "flex")
-            .set("flex-direction", "column")
-            .set("gap", "10px");
-        
-        H3 uploadTitle = new H3("Image de l'événement (optionnel)");
-        uploadTitle.getStyle()
-            .set("margin", "0")
-            .set("font-size", "16px")
-            .set("font-weight", "600")
-            .set("color", "#333");
-        
-        imagePreview.setMaxWidth("300px");
-        imagePreview.setMaxHeight("200px");
-        imagePreview.setVisible(false);
-        imagePreview.getStyle()
-            .set("border-radius", "8px")
-            .set("margin-top", "10px");
-        
-        uploadSection.add(uploadTitle, upload, imagePreview);
-        return uploadSection;
+        // URL de l'image
+        imageUrl.setPlaceholder("Ex: https://example.com/image.jpg");
+        imageUrl.setHelperText("Collez l'URL d'une image hébergée en ligne");
     }
     
     private void configureBinder() {
@@ -199,6 +146,9 @@ public class EventForm extends Div {
             .asRequired("Le prix est obligatoire")
             .withValidator(prix -> prix != null && prix >= 0, "Le prix ne peut pas être négatif")
             .bind(Event::getPrixUnitaire, Event::setPrixUnitaire);
+        
+        binder.forField(imageUrl)
+            .bind(Event::getImagePath, Event::setImagePath);
     }
     
     private HorizontalLayout createButtonsLayout() {
@@ -231,7 +181,7 @@ public class EventForm extends Div {
                 return;
             }
             
-            fireEvent(new SaveEvent(this, event, uploadedFileName, uploadedFileStream));
+            fireEvent(new SaveEvent(this, event));
         } catch (ValidationException e) {
             Notification.show("Veuillez corriger les erreurs du formulaire", 3000, Notification.Position.BOTTOM_START)
                 .addThemeVariants(NotificationVariant.LUMO_ERROR);
@@ -241,17 +191,6 @@ public class EventForm extends Div {
     public void setEvent(Event event) {
         this.event = event;
         binder.readBean(event);
-        
-        // Réinitialiser l'upload
-        uploadedFileName = null;
-        uploadedFileStream = null;
-        imagePreview.setVisible(false);
-        
-        // Si l'événement a déjà une image, l'afficher
-        if (event != null && event.getImagePath() != null) {
-            imagePreview.setSrc("uploads/events/" + event.getImagePath());
-            imagePreview.setVisible(true);
-        }
     }
     
     private void setStyle() {
@@ -277,21 +216,8 @@ public class EventForm extends Div {
     }
     
     public static class SaveEvent extends EventFormEvent {
-        private String fileName;
-        private InputStream fileStream;
-        
-        SaveEvent(EventForm source, Event event, String fileName, InputStream fileStream) {
+        SaveEvent(EventForm source, Event event) {
             super(source, event);
-            this.fileName = fileName;
-            this.fileStream = fileStream;
-        }
-        
-        public String getFileName() {
-            return fileName;
-        }
-        
-        public InputStream getFileStream() {
-            return fileStream;
         }
     }
     

@@ -14,6 +14,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -73,7 +74,45 @@ public class EventService {
             throw new RuntimeException("La date de fin doit être après la date de début");
         }
         
+        // Vérifier automatiquement si l'événement est terminé
+        checkAndUpdateEventStatus(event);
+        
         return eventRepository.save(event);
+    }
+    
+    /**
+     * Vérifier et mettre à jour automatiquement le statut d'un événement
+     */
+    private void checkAndUpdateEventStatus(Event event) {
+        LocalDateTime now = LocalDateTime.now();
+        
+        // Si l'événement est publié et que la date de fin est passée
+        if (event.getStatut() == EventStatus.PUBLIE) {
+            LocalDateTime eventEndDate = event.getDateFin() != null ? event.getDateFin() : event.getDateDebut();
+            
+            if (eventEndDate.isBefore(now)) {
+                event.setStatut(EventStatus.TERMINE);
+            }
+        }
+    }
+    
+    /**
+     * Mettre à jour automatiquement tous les événements terminés
+     * Cette méthode peut être appelée périodiquement ou lors de l'affichage
+     */
+    @Transactional
+    public void updateExpiredEvents() {
+        LocalDateTime now = LocalDateTime.now();
+        List<Event> publishedEvents = eventRepository.findByStatut(EventStatus.PUBLIE);
+        
+        for (Event event : publishedEvents) {
+            LocalDateTime eventEndDate = event.getDateFin() != null ? event.getDateFin() : event.getDateDebut();
+            
+            if (eventEndDate.isBefore(now)) {
+                event.setStatut(EventStatus.TERMINE);
+                eventRepository.save(event);
+            }
+        }
     }
     
     /**
@@ -90,15 +129,37 @@ public class EventService {
     
     /**
      * Supprimer une image d'événement
+     * ✅ CORRECTION: Gestion des URLs externes vs fichiers locaux
      */
     public void deleteEventImage(String imagePath) {
         if (imagePath != null && !imagePath.isEmpty()) {
             try {
+                // Vérifier si c'est une URL externe (commence par http:// ou https://)
+                if (imagePath.startsWith("http://") || imagePath.startsWith("https://")) {
+                    // C'est une URL externe, on ne peut pas la supprimer du serveur
+                    // (elle est hébergée ailleurs)
+                    System.out.println("Image externe (URL), pas de suppression nécessaire: " + imagePath);
+                    return;
+                }
+                
+                // C'est un fichier local, on peut le supprimer
                 Path filePath = Paths.get(UPLOAD_DIR, imagePath);
-                Files.deleteIfExists(filePath);
+                boolean deleted = Files.deleteIfExists(filePath);
+                
+                if (deleted) {
+                    System.out.println("Image locale supprimée avec succès: " + imagePath);
+                } else {
+                    System.out.println("Image locale introuvable (peut-être déjà supprimée): " + imagePath);
+                }
+                
             } catch (IOException e) {
-                // Log l'erreur mais ne pas faire échouer l'opération
+                // Log l'erreur mais ne pas faire échouer l'opération de suppression de l'événement
                 System.err.println("Erreur lors de la suppression de l'image: " + e.getMessage());
+                e.printStackTrace();
+            } catch (Exception e) {
+                // Capture toute autre exception (comme InvalidPathException)
+                System.err.println("Erreur inattendue lors de la suppression de l'image: " + e.getMessage());
+                e.printStackTrace();
             }
         }
     }
@@ -114,6 +175,8 @@ public class EventService {
      * Trouver tous les événements d'un organisateur
      */
     public List<Event> findByOrganisateur(User organisateur) {
+        // Mettre à jour les événements expirés avant de les afficher
+        updateExpiredEvents();
         return eventRepository.findByOrganisateur(organisateur);
     }
     
@@ -121,6 +184,8 @@ public class EventService {
      * Trouver les événements d'un organisateur par statut
      */
     public List<Event> findByOrganisateurAndStatut(User organisateur, EventStatus statut) {
+        // Mettre à jour les événements expirés avant de les afficher
+        updateExpiredEvents();
         return eventRepository.findByOrganisateurAndStatut(organisateur, statut);
     }
     
@@ -176,7 +241,7 @@ public class EventService {
             throw new RuntimeException("Vous n'êtes pas autorisé à supprimer cet événement");
         }
         
-        // Supprimer l'image si elle existe
+        // Supprimer l'image si elle existe (gère maintenant les URLs externes)
         deleteEventImage(event.getImagePath());
         
         eventRepository.delete(event);
