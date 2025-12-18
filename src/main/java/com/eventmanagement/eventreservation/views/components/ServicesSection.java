@@ -1,5 +1,7 @@
 package com.eventmanagement.eventreservation.views.components;
 
+import com.eventmanagement.eventreservation.entity.Event;
+import com.eventmanagement.eventreservation.service.EventService;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.Div;
@@ -12,9 +14,18 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 public class ServicesSection extends Div {
 
-    public ServicesSection() {
+    private final EventService eventService;
+    
+
+    public ServicesSection(EventService eventService) {
+        this.eventService = eventService;
+        
         addClassName("services-section");
         setId("services");
         setWidth("100%");
@@ -85,16 +96,36 @@ public class ServicesSection extends Div {
             .set("margin", "0 auto")
             .set("padding-right", "60px");
 
-        grid.add(
-            createServiceCard("images/DJ1.jpg", "Soirée DJ", "Marrakech", "mariage-details"),
-            createServiceCard("images/confi.jpg", "Conférence du Digital", "Rabat", "conference-details"),
-            createServiceCard("images/gala1.jpg", "Gala artistique", "Casablanca", "anniversaire-details")
-        );
+        // Récupérer tous les événements publiés
+        List<Event> publishedEvents = eventService.findPublishedEvents();
+        
+        if (publishedEvents.isEmpty()) {
+            // Si aucun événement, afficher un message
+            Div emptyMessage = new Div();
+            emptyMessage.getStyle()
+                .set("text-align", "center")
+                .set("padding", "40px")
+                .set("color", "#666");
+            emptyMessage.add(new Span("Aucun événement disponible pour le moment"));
+            grid.add(emptyMessage);
+        } else {
+            // Mélanger et prendre 3 événements aléatoires
+            List<Event> shuffledEvents = new ArrayList<>(publishedEvents);
+            Collections.shuffle(shuffledEvents);
+            
+            // Limiter à 3 événements ou moins si pas assez
+            int count = Math.min(3, shuffledEvents.size());
+            
+            for (int i = 0; i < count; i++) {
+                Event event = shuffledEvents.get(i);
+                grid.add(createServiceCard(event));
+            }
+        }
 
         return grid;
     }
 
-    private Div createServiceCard(String imagePath, String title, String ville, String route) {
+    private Div createServiceCard(Event event) {
         Div card = new Div();
         card.addClassName("service-card");
         card.getStyle()
@@ -104,23 +135,50 @@ public class ServicesSection extends Div {
             .set("overflow", "hidden")
             .set("box-shadow", "0 4px 20px rgba(0,0,0,0.1)")
             .set("cursor", "pointer")
-            .set("position", "relative");
+            .set("position", "relative")
+            .set("transition", "all 0.3s ease");
 
         Div imageContainer = new Div();
         imageContainer.getStyle()
             .set("height", "350px")
             .set("position", "relative")
-            .set("overflow", "hidden");
+            .set("overflow", "hidden")
+            .set("background", "linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%)");
 
-        Image serviceImage = new Image(imagePath, title);
-        serviceImage.getStyle()
-            .set("width", "100%")
-            .set("height", "100%")
-            .set("object-fit", "cover")
-            .set("transition", "transform 0.3s ease");
+        // Image de l'événement
+        if (event.getImagePath() != null && !event.getImagePath().isEmpty()) {
+            Image serviceImage = new Image(event.getImagePath(), event.getTitre());
+            serviceImage.getStyle()
+                .set("width", "100%")
+                .set("height", "100%")
+                .set("object-fit", "cover")
+                .set("transition", "transform 0.3s ease");
+            imageContainer.add(serviceImage);
+            
+            card.getElement().addEventListener("mouseenter", e -> {
+                serviceImage.getStyle().set("transform", "scale(1.05)");
+            });
+            
+            card.getElement().addEventListener("mouseleave", e -> {
+                serviceImage.getStyle().set("transform", "scale(1)");
+            });
+        } else {
+            // Placeholder si pas d'image
+            Div placeholder = new Div();
+            placeholder.getStyle()
+                .set("width", "100%")
+                .set("height", "100%")
+                .set("display", "flex")
+                .set("align-items", "center")
+                .set("justify-content", "center")
+                .set("font-size", "80px")
+                .set("opacity", "0.3");
+            placeholder.add(new Span("🎉"));
+            imageContainer.add(placeholder);
+        }
 
-        // ✅ Badge Ville
-        Span cityBadge = new Span(ville);
+        // Badge Ville
+        Span cityBadge = new Span(event.getVille());
         cityBadge.getStyle()
             .set("position", "absolute")
             .set("top", "16px")
@@ -133,6 +191,7 @@ public class ServicesSection extends Div {
             .set("color", "#2c2c2c")
             .set("box-shadow", "0 2px 8px rgba(0,0,0,0.15)");
 
+        // Overlay avec infos
         Div overlay = new Div();
         overlay.getStyle()
             .set("position", "absolute")
@@ -143,18 +202,35 @@ public class ServicesSection extends Div {
             .set("background", "rgba(255,255,255,0.95)")
             .set("text-align", "center");
 
-        H3 cardTitle = new H3(title);
+        H3 cardTitle = new H3(event.getTitre());
         cardTitle.getStyle()
             .set("font-family", "'Playfair Display', serif")
             .set("font-size", "1.6rem")
             .set("color", "#c9a961")
-            .set("margin", "0");
+            .set("margin", "0 0 8px 0");
+        
+        
 
         overlay.add(cardTitle);
-        imageContainer.add(serviceImage, cityBadge, overlay);
+        imageContainer.add(cityBadge, overlay);
         card.add(imageContainer);
 
-        card.addClickListener(e -> UI.getCurrent().navigate(route));
+        // Navigation vers tous-evenements au clic
+        card.addClickListener(e -> UI.getCurrent().navigate("tous-evenements"));
+        
+        // Effet hover sur la carte
+        card.getElement().addEventListener("mouseenter", e -> {
+            card.getStyle()
+                .set("transform", "translateY(-5px)")
+                .set("box-shadow", "0 8px 30px rgba(0,0,0,0.15)");
+        });
+        
+        card.getElement().addEventListener("mouseleave", e -> {
+            card.getStyle()
+                .set("transform", "translateY(0)")
+                .set("box-shadow", "0 4px 20px rgba(0,0,0,0.1)");
+        });
+        
         return card;
     }
 
@@ -164,7 +240,25 @@ public class ServicesSection extends Div {
             .set("background-color", "#c9a961")
             .set("color", "#ffffff")
             .set("padding", "14px 40px")
-            .set("font-weight", "600");
+            .set("font-weight", "600")
+            .set("border-radius", "25px")
+            .set("border", "none")
+            .set("cursor", "pointer")
+            .set("transition", "all 0.3s ease")
+            .set("box-shadow", "0 4px 15px rgba(201, 169, 97, 0.3)");
+        
+        button.getElement().addEventListener("mouseenter", e -> {
+            button.getStyle()
+                .set("transform", "translateY(-2px)")
+                .set("box-shadow", "0 6px 20px rgba(201, 169, 97, 0.4)");
+        });
+        
+        button.getElement().addEventListener("mouseleave", e -> {
+            button.getStyle()
+                .set("transform", "translateY(0)")
+                .set("box-shadow", "0 4px 15px rgba(201, 169, 97, 0.3)");
+        });
+        
         button.addClickListener(e -> UI.getCurrent().navigate("tous-evenements"));
         return button;
     }

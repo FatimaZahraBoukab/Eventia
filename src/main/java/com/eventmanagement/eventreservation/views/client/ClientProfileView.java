@@ -9,11 +9,8 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.html.Span;
-import com.vaadin.flow.component.icon.Icon;
-import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
-import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.EmailField;
@@ -57,7 +54,7 @@ public class ClientProfileView extends Div {
             .set("padding", "0")
             .set("overflow-y", "auto");
         
-        Div header = createClientHeader();
+   
         
         Div contentContainer = new Div();
         contentContainer.getStyle().set("padding", "30px");
@@ -76,132 +73,10 @@ public class ClientProfileView extends Div {
         profileLayout.add(createProfileCard(), createSecurityCard());
         
         contentContainer.add(pageTitle, profileLayout);
-        mainContent.add(header, contentContainer);
+        mainContent.add( contentContainer);
         add(sidebar, mainContent);
     }
     
-    private Div createClientHeader() {
-        Div header = new Div();
-        header.getStyle()
-            .set("background", "#FFFFFF")
-            .set("padding", "20px 30px")
-            .set("border-bottom", "1px solid #E8E6E3")
-            .set("display", "flex")
-            .set("justify-content", "space-between")
-            .set("align-items", "center")
-            .set("box-shadow", "0 1px 3px rgba(0,0,0,0.04)");
-        
-        Button reserverButton = new Button("Réserver", new Icon(VaadinIcon.PLUS));
-        reserverButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        reserverButton.getStyle()
-            .set("background", "linear-gradient(135deg, #C8A050 0%, #D4AF6E 100%)")
-            .set("border", "none")
-            .set("color", "#FFFFFF")
-            .set("font-weight", "600")
-            .set("border-radius", "25px")
-            .set("padding", "10px 24px")
-            .set("box-shadow", "0 4px 12px rgba(200, 160, 80, 0.25)")
-            .set("transition", "all 0.3s ease");
-        
-        reserverButton.addClickListener(e -> UI.getCurrent().navigate("client/events"));
-        
-        reserverButton.getElement().addEventListener("mouseenter", e -> {
-            reserverButton.getStyle()
-                .set("transform", "translateY(-2px)")
-                .set("box-shadow", "0 6px 20px rgba(200, 160, 80, 0.35)");
-        });
-        
-        reserverButton.getElement().addEventListener("mouseleave", e -> {
-            reserverButton.getStyle()
-                .set("transform", "translateY(0)")
-                .set("box-shadow", "0 4px 12px rgba(200, 160, 80, 0.25)");
-        });
-        
-        HorizontalLayout rightSection = new HorizontalLayout();
-        rightSection.setSpacing(true);
-        rightSection.setAlignItems(FlexComponent.Alignment.CENTER);
-        rightSection.getStyle().set("gap", "15px");
-        
-        Div supportIcon = new Div();
-        supportIcon.getStyle()
-            .set("width", "40px")
-            .set("height", "40px")
-            .set("border-radius", "50%")
-            .set("background", "rgba(200, 160, 80, 0.1)")
-            .set("display", "flex")
-            .set("align-items", "center")
-            .set("justify-content", "center")
-            .set("cursor", "pointer")
-            .set("transition", "all 0.3s ease");
-        
-        Icon helpIcon = VaadinIcon.QUESTION_CIRCLE.create();
-        helpIcon.getStyle()
-            .set("color", "#C8A050")
-            .set("width", "22px")
-            .set("height", "22px");
-        supportIcon.add(helpIcon);
-        
-        supportIcon.getElement().addEventListener("mouseenter", e -> {
-            supportIcon.getStyle().set("background", "rgba(200, 160, 80, 0.2)");
-        });
-        
-        supportIcon.getElement().addEventListener("mouseleave", e -> {
-            supportIcon.getStyle().set("background", "rgba(200, 160, 80, 0.1)");
-        });
-        
-        supportIcon.getElement().addEventListener("click", e -> UI.getCurrent().navigate("client/support"));
-        
-        User user = VaadinSession.getCurrent().getAttribute(User.class);
-        String userName = user != null ? user.getFullName() : "Client";
-        String userInitial = userName.substring(0, 1).toUpperCase();
-        
-        HorizontalLayout profileSection = new HorizontalLayout();
-        profileSection.setSpacing(true);
-        profileSection.setAlignItems(HorizontalLayout.Alignment.CENTER);
-        profileSection.getStyle()
-            .set("cursor", "pointer")
-            .set("padding", "8px 15px")
-            .set("border-radius", "30px")
-            .set("transition", "all 0.3s ease");
-        
-        Span nameSpan = new Span(userName);
-        nameSpan.getStyle()
-            .set("color", "#2C2C2C")
-            .set("font-weight", "500")
-            .set("font-size", "14px")
-            .set("margin-right", "12px");
-        
-        Div avatar = new Div();
-        avatar.getStyle()
-            .set("width", "40px")
-            .set("height", "40px")
-            .set("border-radius", "50%")
-            .set("background", "linear-gradient(135deg, #C8A050 0%, #D4AF6E 100%)")
-            .set("display", "flex")
-            .set("align-items", "center")
-            .set("justify-content", "center")
-            .set("color", "#FFFFFF")
-            .set("font-weight", "700")
-            .set("font-size", "16px")
-            .set("box-shadow", "0 2px 8px rgba(200, 160, 80, 0.25)");
-        
-        avatar.add(new Span(userInitial));
-        profileSection.add(nameSpan, avatar);
-        
-        profileSection.getElement().addEventListener("mouseenter", e -> {
-            profileSection.getStyle().set("background", "rgba(200, 160, 80, 0.08)");
-        });
-        
-        profileSection.getElement().addEventListener("mouseleave", e -> {
-            profileSection.getStyle().set("background", "transparent");
-        });
-        
-        profileSection.getElement().addEventListener("click", e -> UI.getCurrent().navigate("client/profile"));
-        
-        rightSection.add(supportIcon, profileSection);
-        header.add(reserverButton, rightSection);
-        return header;
-    }
     
     private Div createProfileCard() {
         Div card = new Div();

@@ -1,22 +1,34 @@
 package com.eventmanagement.eventreservation.views;
 
+import com.eventmanagement.eventreservation.entity.Event;
+import com.eventmanagement.eventreservation.service.EventService;
+import com.eventmanagement.eventreservation.views.components.Footer;
+import com.eventmanagement.eventreservation.views.components.PublicHeader;
 import com.vaadin.flow.component.UI;
-import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.H1;
-import com.vaadin.flow.component.html.H3;
-import com.vaadin.flow.component.html.Image;
-import com.vaadin.flow.component.html.Paragraph;
-import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.dialog.Dialog;
+import com.vaadin.flow.component.html.*;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;
-import com.eventmanagement.eventreservation.views.components.PublicHeader;
-import com.vaadin.flow.component.orderedlayout.FlexLayout;
-import com.eventmanagement.eventreservation.views.components.Footer;
+
+import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 @Route("tous-evenements")
 public class TousEvenementsView extends Div {
     
-    public TousEvenementsView() {
+    private final EventService eventService;
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd MMMM yyyy");
+    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
+    
+    public TousEvenementsView(EventService eventService) {
+        this.eventService = eventService;
+        
         setSizeFull();
         getStyle()
             .set("margin", "0")
@@ -33,151 +45,570 @@ public class TousEvenementsView extends Div {
         contentContainer.setWidthFull();
         contentContainer.getStyle().set("margin-top", "60px");
         
-        Div headerSection = createHeaderSection();
-        Div eventsGrid = createEventsGrid();
+        List<Event> events = eventService.findPublishedEvents();
+        
+        Div eventsSection = createEventsSection(events);
         Footer footer = new Footer();
         
-        contentContainer.add(headerSection, eventsGrid, footer);
+        contentContainer.add(eventsSection, footer);
         add(header, contentContainer);
     }
     
-    private Div createHeaderSection() {
-        Div header = new Div();
-        header.getStyle()
-            .set("padding", "80px 40px 60px 40px")
-            .set("background-color", "#f5f5f5")
-            .set("text-align", "center");
+    private Div createEventsSection(List<Event> events) {
+        Div section = new Div();
+        section.getStyle()
+            .set("padding", "60px 40px")
+            .set("background-color", "#FAF9F7")
+            .set("min-height", "calc(100vh - 140px)");
         
-        Span services = new Span("NOS ÉVÉNEMENTS");
-        services.getStyle()
-            .set("font-size", "0.9rem")
-            .set("color", "#c9a961")
-            .set("letter-spacing", "3px")
-            .set("font-weight", "500")
-            .set("display", "block")
-            .set("margin-bottom", "15px");
-        
-        H1 title = new H1("Tous nos services événementiels");
-        title.getStyle()
-            .set("font-family", "'Playfair Display', 'Georgia', serif")
-            .set("font-size", "3rem")
-            .set("color", "#2c2c2c")
-            .set("margin-bottom", "20px")
-            .set("font-weight", "400");
-        
-        Paragraph subtitle = new Paragraph("Découvrez notre gamme complète de services pour tous vos événements");
-        subtitle.getStyle()
-            .set("font-size", "1.1rem")
-            .set("color", "#666")
-            .set("margin", "0");
-        
-        header.add(services, title, subtitle);
-        return header;
-    }
-    
-    private Div createEventsGrid() {
-        Div gridContainer = new Div();
-        gridContainer.getStyle()
-            .set("padding", "80px 40px")
-            .set("background-color", "#ffffff");
-        
-        FlexLayout grid = new FlexLayout();
-        grid.getStyle()
+        Div container = new Div();
+        container.getStyle()
             .set("max-width", "1400px")
-            .set("margin", "0 auto")
-            .set("display", "flex")
-            .set("flex-wrap", "wrap")
-            .set("gap", "30px")
-            .set("justify-content", "center");
+            .set("margin", "0 auto");
         
-        // 9 événements
-        grid.add(createEventCard("images/mariage.jpg", "Mariages", "Célébrations inoubliables", "mariage-details"));
-        grid.add(createEventCard("images/conference.jpg", "Conférence & Séminaire", "Événements professionnels", "conference-details"));
-        grid.add(createEventCard("images/anniversaire.jpg", "Anniversaire", "Fêtes personnalisées", "anniversaire-details"));
-        grid.add(createEventCard("images/bapteme.jpg", "Baptême", "Moments sacrés et précieux", "bapteme-details"));
-        grid.add(createEventCard("images/gala.jpg", "Soirée de Gala", "Élégance et prestige", "gala-details"));
-        grid.add(createEventCard("images/teambuilding.jpg", "Team Building", "Renforcement d'équipe", "teambuilding-details"));
-        grid.add(createEventCard("images/lancement.jpg", "Lancement de Produit", "Événements corporate", "lancement-details"));
-        grid.add(createEventCard("images/festival.jpg", "Festival & Concert", "Événements culturels", "festival-details"));
-        grid.add(createEventCard("images/exposition.jpg", "Exposition", "Événements artistiques", "exposition-details"));
+        if (events.isEmpty()) {
+            Div emptyState = createEmptyState();
+            container.add(emptyState);
+        } else {
+            Div grid = createEventsGrid(events);
+            container.add(grid);
+        }
         
-        gridContainer.add(grid);
-        return gridContainer;
+        section.add(container);
+        return section;
     }
     
-    private Div createEventCard(String imagePath, String title, String description, String route) {
+    private Div createEventsGrid(List<Event> events) {
+        Div grid = new Div();
+        grid.getStyle()
+            .set("display", "grid")
+            .set("grid-template-columns", "repeat(3, 1fr)")
+            .set("gap", "30px")
+            .set("width", "100%");
+        
+        for (Event event : events) {
+            Div card = createEventCard(event);
+            grid.add(card);
+        }
+        
+        return grid;
+    }
+    
+    private Div createEventCard(Event event) {
         Div card = new Div();
         card.getStyle()
-            .set("width", "380px")
-            .set("background-color", "#ffffff")
-            .set("border-radius", "8px")
+            .set("background", "#ffffff")
+            .set("border-radius", "16px")
             .set("overflow", "hidden")
-            .set("box-shadow", "0 4px 20px rgba(0,0,0,0.1)")
+            .set("box-shadow", "0 4px 20px rgba(0,0,0,0.08)")
             .set("transition", "all 0.3s ease")
-            .set("cursor", "pointer");
+            .set("cursor", "pointer")
+            .set("border", "1px solid #e8e8e8")
+            .set("height", "100%")
+            .set("display", "flex")
+            .set("flex-direction", "column");
         
-        // Image container
         Div imageContainer = new Div();
         imageContainer.getStyle()
             .set("width", "100%")
-            .set("height", "300px")
+            .set("height", "240px")
             .set("overflow", "hidden")
-            .set("position", "relative");
+            .set("position", "relative")
+            .set("background", "linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%)");
         
-        Image eventImage = new Image(imagePath, title);
-        eventImage.getStyle()
-            .set("width", "100%")
-            .set("height", "100%")
-            .set("object-fit", "cover")
-            .set("transition", "transform 0.3s ease");
+        if (event.getImagePath() != null && !event.getImagePath().isEmpty()) {
+            Image eventImage = new Image(event.getImagePath(), event.getTitre());
+            eventImage.getStyle()
+                .set("width", "100%")
+                .set("height", "100%")
+                .set("object-fit", "cover")
+                .set("transition", "transform 0.3s ease");
+            imageContainer.add(eventImage);
+            
+            card.getElement().addEventListener("mouseenter", e -> {
+                eventImage.getStyle().set("transform", "scale(1.05)");
+            });
+            
+            card.getElement().addEventListener("mouseleave", e -> {
+                eventImage.getStyle().set("transform", "scale(1)");
+            });
+        } else {
+            Div placeholder = new Div();
+            placeholder.getStyle()
+                .set("width", "100%")
+                .set("height", "100%")
+                .set("display", "flex")
+                .set("align-items", "center")
+                .set("justify-content", "center")
+                .set("font-size", "64px")
+                .set("opacity", "0.3");
+            placeholder.add(new Span("🎉"));
+            imageContainer.add(placeholder);
+        }
         
-        imageContainer.add(eventImage);
-        
-        // Content
         Div content = new Div();
         content.getStyle()
             .set("padding", "25px")
-            .set("text-align", "center")
-            .set("background-color", "#ffffff");
+            .set("flex", "1")
+            .set("display", "flex")
+            .set("flex-direction", "column");
         
-        H3 cardTitle = new H3(title);
-        cardTitle.getStyle()
-            .set("font-family", "'Playfair Display', 'Georgia', serif")
-            .set("font-size", "1.5rem")
-            .set("color", "#c9a961")
-            .set("margin", "0 0 10px 0")
-            .set("font-weight", "400");
+        H3 eventTitle = new H3(event.getTitre());
+        eventTitle.getStyle()
+            .set("margin", "0 0 15px 0")
+            .set("color", "#2C3E50")
+            .set("font-size", "20px")
+            .set("font-weight", "700")
+            .set("line-height", "1.3");
         
-        Paragraph cardDesc = new Paragraph(description);
-        cardDesc.getStyle()
-            .set("font-size", "0.95rem")
-            .set("color", "#666")
-            .set("margin", "0")
-            .set("line-height", "1.5");
+        Div quickInfo = new Div();
+        quickInfo.getStyle()
+            .set("display", "flex")
+            .set("flex-direction", "column")
+            .set("gap", "12px")
+            .set("margin-bottom", "20px")
+            .set("flex", "1");
         
-        content.add(cardTitle, cardDesc);
+        Div dateInfo = createInfoRow(VaadinIcon.CALENDAR, 
+            event.getDateDebut().format(DATE_FORMATTER) + " à " + event.getDateDebut().format(TIME_FORMATTER));
+        
+        Div locationInfo = createInfoRow(VaadinIcon.MAP_MARKER, 
+            event.getLieu() + ", " + event.getVille());
+        
+        Div priceInfo = createInfoRow(VaadinIcon.MONEY, 
+            event.getPrixUnitaire() == 0 ? "Gratuit" : String.format("%.2f DH", event.getPrixUnitaire()));
+        
+        quickInfo.add(dateInfo, locationInfo, priceInfo);
+        
+        Button detailsButton = new Button("Voir les détails");
+        detailsButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        detailsButton.setWidthFull();
+        detailsButton.getStyle()
+            .set("background", "linear-gradient(135deg, #C8A050 0%, #D4AF6A 100%)")
+            .set("border", "none")
+            .set("border-radius", "10px")
+            .set("padding", "12px")
+            .set("font-weight", "600")
+            .set("cursor", "pointer")
+            .set("transition", "all 0.3s ease");
+        
+        detailsButton.addClickListener(e -> showEventDetails(event));
+        
+        content.add(eventTitle, quickInfo, detailsButton);
         card.add(imageContainer, content);
         
-        // Hover effects
         card.getElement().addEventListener("mouseenter", e -> {
             card.getStyle()
-                .set("transform", "translateY(-10px)")
-                .set("box-shadow", "0 10px 40px rgba(0,0,0,0.15)");
-            eventImage.getStyle().set("transform", "scale(1.1)");
+                .set("transform", "translateY(-5px)")
+                .set("box-shadow", "0 8px 30px rgba(0,0,0,0.12)");
         });
         
         card.getElement().addEventListener("mouseleave", e -> {
             card.getStyle()
                 .set("transform", "translateY(0)")
-                .set("box-shadow", "0 4px 20px rgba(0,0,0,0.1)");
-            eventImage.getStyle().set("transform", "scale(1)");
-        });
-        
-        // Navigation
-        card.addClickListener(e -> {
-            UI.getCurrent().navigate(route);
+                .set("box-shadow", "0 4px 20px rgba(0,0,0,0.08)");
         });
         
         return card;
+    }
+    
+    private Div createInfoRow(VaadinIcon iconType, String text) {
+        Div row = new Div();
+        row.getStyle()
+            .set("display", "flex")
+            .set("align-items", "center")
+            .set("gap", "10px");
+        
+        Icon icon = iconType.create();
+        icon.getStyle()
+            .set("color", "#C8A050")
+            .set("width", "18px")
+            .set("height", "18px")
+            .set("flex-shrink", "0");
+        
+        Span textSpan = new Span(text);
+        textSpan.getStyle()
+            .set("font-size", "14px")
+            .set("color", "#555")
+            .set("line-height", "1.4");
+        
+        row.add(icon, textSpan);
+        return row;
+    }
+    
+    private void showEventDetails(Event event) {
+        Dialog dialog = new Dialog();
+        dialog.setWidth("900px");
+        dialog.setMaxHeight("95vh");
+        dialog.getElement().getStyle()
+            .set("border-radius", "20px")
+            .set("overflow", "hidden");
+        
+        // Container principal avec scroll
+        Div mainContainer = new Div();
+        mainContainer.getStyle()
+            .set("max-height", "90vh")
+            .set("overflow-y", "auto")
+            .set("background", "#ffffff");
+        
+        // Header moderne avec image de fond
+        Div dialogHeader = new Div();
+        dialogHeader.getStyle()
+            .set("position", "relative")
+            .set("height", "320px")
+            .set("overflow", "hidden");
+        
+        // Image de fond avec overlay
+        if (event.getImagePath() != null && !event.getImagePath().isEmpty()) {
+            Div imageBackdrop = new Div();
+            imageBackdrop.getStyle()
+                .set("position", "absolute")
+                .set("top", "0")
+                .set("left", "0")
+                .set("width", "100%")
+                .set("height", "100%")
+                .set("background-image", "url('" + event.getImagePath() + "')")
+                .set("background-size", "cover")
+                .set("background-position", "center")
+                .set("filter", "brightness(0.6) blur(2px)")
+                .set("transform", "scale(1.1)");
+            dialogHeader.add(imageBackdrop);
+        }
+        
+        // Overlay gradient
+        Div overlay = new Div();
+        overlay.getStyle()
+            .set("position", "absolute")
+            .set("top", "0")
+            .set("left", "0")
+            .set("width", "100%")
+            .set("height", "100%");
+           
+        dialogHeader.add(overlay);
+        
+        // Bouton fermer
+        Button closeButton = new Button(new Icon(VaadinIcon.CLOSE));
+        closeButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_CONTRAST);
+        closeButton.getStyle()
+            .set("position", "absolute")
+            .set("top", "20px")
+            .set("right", "20px")
+            .set("color", "#ffffff")
+            .set("background", "rgba(0,0,0,0.3)")
+            .set("border-radius", "50%")
+            .set("width", "45px")
+            .set("height", "45px")
+            .set("cursor", "pointer")
+            .set("transition", "all 0.3s ease")
+            .set("z-index", "10");
+        closeButton.addClickListener(e -> dialog.close());
+        dialogHeader.add(closeButton);
+        
+        // Contenu du header
+        Div headerContent = new Div();
+        headerContent.getStyle()
+            .set("position", "absolute")
+            .set("bottom", "30px")
+            .set("left", "40px")
+            .set("right", "40px")
+            .set("z-index", "5");
+        
+        // Badge catégorie
+        Span categoryBadge = new Span(event.getCategorie().getDisplayName());
+        categoryBadge.getStyle()
+            .set("background", "rgba(255, 255, 255, 0.95)")
+            .set("color", "#C8A050")
+            .set("padding", "8px 20px")
+            .set("border-radius", "25px")
+            .set("font-size", "12px")
+            .set("font-weight", "700")
+            .set("text-transform", "uppercase")
+            .set("letter-spacing", "1px")
+            .set("display", "inline-block")
+            .set("margin-bottom", "15px")
+            .set("box-shadow", "0 2px 10px rgba(0,0,0,0.1)");
+        
+        // Titre
+        H1 dialogTitle = new H1(event.getTitre());
+        dialogTitle.getStyle()
+            .set("margin", "0")
+            .set("color", "#ffffff")
+            .set("font-size", "36px")
+            .set("font-weight", "800")
+            .set("line-height", "1.2")
+            .set("text-shadow", "0 2px 20px rgba(0,0,0,0.3)");
+        
+        headerContent.add(categoryBadge, dialogTitle);
+        dialogHeader.add(headerContent);
+        
+        // Contenu principal
+        Div dialogContent = new Div();
+        dialogContent.getStyle()
+            .set("padding", "40px")
+            .set("background", "#ffffff");
+        
+        // Section informations clés - Design en cards horizontales
+        Div infoSection = new Div();
+        infoSection.getStyle()
+            .set("display", "grid")
+            .set("grid-template-columns", "repeat(3, 1fr)")
+            .set("gap", "20px")
+            .set("margin-bottom", "35px");
+        
+        infoSection.add(
+            createModernInfoCard(VaadinIcon.CALENDAR, "Date", event.getDateDebut().format(DATE_FORMATTER)),
+            createModernInfoCard(VaadinIcon.CLOCK, "Heure", event.getDateDebut().format(TIME_FORMATTER)),
+            createModernInfoCard(VaadinIcon.USERS, "Capacité", event.getCapaciteMax() + " places")
+        );
+        
+        // Deuxième ligne
+        Div infoSection2 = new Div();
+        infoSection2.getStyle()
+            .set("display", "grid")
+            .set("grid-template-columns", "repeat(3, 1fr)")
+            .set("gap", "20px")
+            .set("margin-bottom", "35px");
+        
+        infoSection2.add(
+            createModernInfoCard(VaadinIcon.MAP_MARKER, "Lieu", event.getLieu()),
+            createModernInfoCard(VaadinIcon.LOCATION_ARROW, "Ville", event.getVille()),
+            createModernInfoCard(VaadinIcon.MONEY, "Prix", 
+                event.getPrixUnitaire() == 0 ? "Gratuit" : String.format("%.2f DH", event.getPrixUnitaire()))
+        );
+        
+        dialogContent.add(infoSection, infoSection2);
+        
+        // Ligne séparatrice élégante
+        Div separator = new Div();
+        separator.getStyle()
+            .set("height", "1px")
+            .set("background", "linear-gradient(90deg, transparent 0%, #E0E0E0 50%, transparent 100%)")
+            .set("margin", "35px 0");
+        dialogContent.add(separator);
+        
+        // Description avec design moderne
+        if (event.getDescription() != null && !event.getDescription().isEmpty()) {
+            Div descriptionSection = new Div();
+            descriptionSection.getStyle()
+                .set("margin-bottom", "35px");
+            
+            Div descHeader = new Div();
+            descHeader.getStyle()
+                .set("display", "flex")
+                .set("align-items", "center")
+                .set("gap", "12px")
+                .set("margin-bottom", "20px");
+            
+            Div iconCircle = new Div();
+            iconCircle.getStyle()
+                .set("width", "40px")
+                .set("height", "40px")
+                .set("border-radius", "50%")
+                .set("background", "linear-gradient(135deg, #C8A050 0%, #D4AF6A 100%)")
+                .set("display", "flex")
+                .set("align-items", "center")
+                .set("justify-content", "center")
+                .set("box-shadow", "0 4px 15px rgba(200, 160, 80, 0.25)");
+            
+            Icon descIcon = VaadinIcon.CLIPBOARD_TEXT.create();
+            descIcon.getStyle()
+                .set("color", "#ffffff")
+                .set("width", "20px")
+                .set("height", "20px");
+            iconCircle.add(descIcon);
+            
+            H3 descTitle = new H3("À propos de cet événement");
+            descTitle.getStyle()
+                .set("margin", "0")
+                .set("color", "#2C3E50")
+                .set("font-size", "22px")
+                .set("font-weight", "700");
+            
+            descHeader.add(iconCircle, descTitle);
+            
+            Paragraph descText = new Paragraph(event.getDescription());
+            descText.getStyle()
+                .set("margin", "0")
+                .set("color", "#555")
+                .set("line-height", "1.8")
+                .set("font-size", "15px")
+                .set("padding", "25px")
+                .set("background", "#F8F9FA")
+                .set("border-radius", "12px")
+                .set("border", "1px solid #E8E8E8");
+            
+            descriptionSection.add(descHeader, descText);
+            dialogContent.add(descriptionSection);
+        }
+        
+        // Call to action
+        Div ctaSection = new Div();
+        ctaSection.getStyle()
+            .set("background", "linear-gradient(135deg, #FFF8E7 0%, #FFF4D6 100%)")
+            .set("padding", "30px")
+            .set("border-radius", "16px")
+            .set("border", "2px solid #C8A050")
+            .set("text-align", "center")
+            .set("box-shadow", "0 4px 20px rgba(200, 160, 80, 0.15)");
+        
+        Icon lockIcon = VaadinIcon.LOCK.create();
+        lockIcon.getStyle()
+            .set("color", "#C8A050")
+            .set("width", "32px")
+            .set("height", "32px")
+            .set("margin-bottom", "15px");
+        
+        H4 ctaTitle = new H4("Réservation requise");
+        ctaTitle.getStyle()
+            .set("margin", "0 0 10px 0")
+            .set("color", "#2C3E50")
+            .set("font-size", "20px")
+            .set("font-weight", "700");
+        
+        Paragraph ctaText = new Paragraph("Connectez-vous ou créez un compte pour réserver votre place à cet événement");
+        ctaText.getStyle()
+            .set("margin", "0 0 25px 0")
+            .set("color", "#666")
+            .set("font-size", "14px")
+            .set("line-height", "1.6");
+        
+        HorizontalLayout buttonsLayout = new HorizontalLayout();
+        buttonsLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.CENTER);
+        buttonsLayout.getStyle().set("gap", "15px");
+        
+        Button loginBtn = new Button("Se connecter", new Icon(VaadinIcon.SIGN_IN));
+        loginBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_LARGE);
+        loginBtn.getStyle()
+            .set("background", "linear-gradient(135deg, #C8A050 0%, #D4AF6A 100%)")
+            .set("border", "none")
+            .set("border-radius", "12px")
+            .set("padding", "14px 32px")
+            .set("font-weight", "700")
+            .set("cursor", "pointer")
+            .set("box-shadow", "0 4px 15px rgba(200, 160, 80, 0.3)")
+            .set("transition", "all 0.3s ease");
+        loginBtn.addClickListener(e -> {
+            dialog.close();
+            UI.getCurrent().navigate("login");
+        });
+        
+        Button registerBtn = new Button("Créer un compte", new Icon(VaadinIcon.USER_CARD));
+        registerBtn.addThemeVariants(ButtonVariant.LUMO_LARGE);
+        registerBtn.getStyle()
+            .set("border", "2px solid #C8A050")
+            .set("color", "#C8A050")
+            .set("background", "#ffffff")
+            .set("border-radius", "12px")
+            .set("padding", "14px 32px")
+            .set("font-weight", "700")
+            .set("cursor", "pointer")
+            .set("transition", "all 0.3s ease");
+        registerBtn.addClickListener(e -> {
+            dialog.close();
+            UI.getCurrent().navigate("register");
+        });
+        
+        buttonsLayout.add(loginBtn, registerBtn);
+        ctaSection.add(lockIcon, ctaTitle, ctaText, buttonsLayout);
+        dialogContent.add(ctaSection);
+        
+        mainContainer.add(dialogHeader, dialogContent);
+        dialog.add(mainContainer);
+        dialog.open();
+    }
+    
+    private Div createModernInfoCard(VaadinIcon icon, String label, String value) {
+        Div card = new Div();
+        card.getStyle()
+            .set("background", "#ffffff")
+            .set("padding", "20px")
+            .set("border-radius", "12px")
+            .set("border", "1px solid #E8E8E8")
+            .set("transition", "all 0.3s ease")
+            .set("position", "relative")
+            .set("overflow", "hidden");
+        
+        // Accent bar
+        Div accentBar = new Div();
+        accentBar.getStyle()
+            .set("position", "absolute")
+            .set("top", "0")
+            .set("left", "0")
+            .set("width", "4px")
+            .set("height", "100%")
+            .set("background", "linear-gradient(180deg, #C8A050 0%, #D4AF6A 100%)");
+        card.add(accentBar);
+        
+        Div content = new Div();
+        content.getStyle()
+            .set("padding-left", "15px");
+        
+        HorizontalLayout header = new HorizontalLayout();
+        header.setSpacing(false);
+        header.setAlignItems(FlexComponent.Alignment.CENTER);
+        header.getStyle().set("margin-bottom", "8px");
+        
+        Icon cardIcon = icon.create();
+        cardIcon.getStyle()
+            .set("color", "#C8A050")
+            .set("width", "20px")
+            .set("height", "20px")
+            .set("margin-right", "8px");
+        
+        Span labelSpan = new Span(label);
+        labelSpan.getStyle()
+            .set("font-size", "11px")
+            .set("color", "#999")
+            .set("font-weight", "600")
+            .set("text-transform", "uppercase")
+            .set("letter-spacing", "0.5px");
+        
+        header.add(cardIcon, labelSpan);
+        
+        Span valueSpan = new Span(value);
+        valueSpan.getStyle()
+            .set("display", "block")
+            .set("font-size", "16px")
+            .set("color", "#2C3E50")
+            .set("font-weight", "700")
+            .set("line-height", "1.4");
+        
+        content.add(header, valueSpan);
+        card.add(content);
+        
+        return card;
+    }
+    
+    private Div createEmptyState() {
+        Div container = new Div();
+        container.getStyle()
+            .set("background", "#ffffff")
+            .set("border-radius", "16px")
+            .set("padding", "80px")
+            .set("box-shadow", "0 4px 20px rgba(0,0,0,0.08)")
+            .set("text-align", "center");
+        
+        Span icon = new Span("📅");
+        icon.getStyle()
+            .set("font-size", "80px")
+            .set("display", "block")
+            .set("margin-bottom", "20px");
+        
+        Span message = new Span("Aucun événement disponible pour le moment");
+        message.getStyle()
+            .set("color", "#666666")
+            .set("font-size", "20px")
+            .set("display", "block")
+            .set("margin-bottom", "10px")
+            .set("font-weight", "600");
+        
+        Span subtitle = new Span("Les nouveaux événements apparaîtront ici dès leur publication");
+        subtitle.getStyle()
+            .set("color", "#999999")
+            .set("font-size", "15px")
+            .set("display", "block");
+        
+        container.add(icon, message, subtitle);
+        return container;
     }
 }

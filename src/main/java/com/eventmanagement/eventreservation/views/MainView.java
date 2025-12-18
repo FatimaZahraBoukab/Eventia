@@ -1,6 +1,7 @@
 package com.eventmanagement.eventreservation.views;
 
 import com.eventmanagement.eventreservation.service.ContactMessageService;
+import com.eventmanagement.eventreservation.service.EventService;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.router.Route;
 import com.eventmanagement.eventreservation.views.components.PublicHeader;
@@ -18,8 +19,12 @@ public class MainView extends Div {
     @Autowired
     private ContactMessageService contactMessageService;
     
-    public MainView(ContactMessageService contactMessageService) {
+    @Autowired
+    private EventService eventService;
+    
+    public MainView(ContactMessageService contactMessageService, EventService eventService) {
         this.contactMessageService = contactMessageService;
+        this.eventService = eventService;
         
         // Configuration de la page principale
         setSizeFull();
@@ -43,9 +48,9 @@ public class MainView extends Div {
         // Sections
         HeroSection hero = new HeroSection();
         AboutSection about = new AboutSection();
-        ServicesSection services = new ServicesSection();
+        ServicesSection services = new ServicesSection(eventService); // Injection du service
         AvisSection avis = new AvisSection();
-        ContactSection contact = new ContactSection(contactMessageService); // Injection du service
+        ContactSection contact = new ContactSection(contactMessageService);
         Footer footer = new Footer();
 
         mainContent.add(hero, about, services, avis, contact, footer);
