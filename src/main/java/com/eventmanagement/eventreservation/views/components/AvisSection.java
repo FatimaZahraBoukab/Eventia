@@ -98,7 +98,7 @@ public class AvisSection extends Div {
             "Participante événementielle",
             "Eventia nous permet de réserver rapidement des conférences et spectacles déjà organisés. La plateforme est simple à utiliser et offre un large choix d’événements.",
             5,
-            "images/avis1.jpg"
+            "images/avis1.png"
         ));
         
         // Témoignage 2
@@ -107,7 +107,7 @@ public class AvisSection extends Div {
             "Directeur Marketing",
             "Grâce à Eventia, nous réservons facilement des séminaires et événements professionnels. Les informations sont claires, les réservations instantanées et le suivi très pratique. Un vrai gain de temps .",
             4.5,
-            "images/avis2.jpg"
+            "images/avis2.png"
         ));
         
         // Témoignage 3
@@ -116,7 +116,7 @@ public class AvisSection extends Div {
             "Chef d'entreprise",
             "Eventia est devenue notre solution principale pour réserver des galas et festivals. Le catalogue d’événements est riche et bien organisé . Je recommande vivement !",
             5,
-            "images/avis3.jpg"
+            "images/avis3.png"
         ));
         
         return grid;
