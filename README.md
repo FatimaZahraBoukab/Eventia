@@ -15,7 +15,7 @@ Interface Moderne : Design responsive avec Vaadin
 
 
 ## Technologies Utilisées
-Backend
+### Backend
 
 Java 17+ - Langage de programmation
 Spring Boot 3.x - Framework principal
@@ -24,13 +24,13 @@ Spring Security - Authentification et autorisation
 Hibernate - ORM (Object-Relational Mapping)
 H2 Database - Base de données embarquée
 
-Frontend
+### Frontend
 
 Vaadin 24.x - Framework UI Java
 Vaadin Components - Composants UI modernes
 Vaadin Charts - Graphiques et visualisations
 
-Build & Outils
+### Build & Outils
 
 Maven - Gestion des dépendances
 Lombok - Réduction du code boilerplate
