@@ -1,6 +1,6 @@
 # Eventia - Système de Gestion de Réservations d'Événements
 
-<img src="https://github.com/user-attachments/assets/6f2b8834-2e18-4428-98dc-53e30b6d2e6a" alt="Eventia" align="right" width="400" height="150"/>
+<img src="https://github.com/user-attachments/assets/6f2b8834-2e18-4428-98dc-53e30b6d2e6a" alt="Eventia" align="right" width="400" height="700"/>
 📋 Description du Projet
 Eventia est une plateforme web complète de gestion de réservations d'événements culturels (concerts, théâtres, conférences, événements sportifs, etc.). L'application permet aux organisateurs de créer et gérer des événements, aux clients de réserver des places en ligne, et aux administrateurs de superviser l'ensemble de la plateforme.
 Fonctionnalités Principales
