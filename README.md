@@ -7,12 +7,12 @@ Eventia est une plateforme web complète de gestion de réservations d'événeme
 
 ### Fonctionnalités Principales
 
-**Gestion des Événements** : Création, modification, publication et annulation d'événements
-**Système de Réservation** : Réservation en ligne avec génération de code unique
-**Multi-rôles** : Interface adaptée pour Clients, Organisateurs et Administrateurs
-**Tableau de Bord Interactif** : Statistiques et graphiques en temps réel
-**Gestion des Utilisateurs** : Inscription, authentification et gestion de profil
-**Interface Moderne** : Design responsive avec Vaadin
+-**Gestion des Événements** : Création, modification, publication et annulation d'événements
+-**Système de Réservation** : Réservation en ligne avec génération de code unique
+-**Multi-rôles** : Interface adaptée pour Clients, Organisateurs et Administrateurs
+-**Tableau de Bord Interactif** : Statistiques et graphiques en temps réel
+-**Gestion des Utilisateurs** : Inscription, authentification et gestion de profil
+-**Interface Moderne** : Design responsive avec Vaadin
 
 
 ## 🛠️ Technologies Utilisées
