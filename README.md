@@ -36,7 +36,7 @@ Maven - Gestion des dépendances
 Lombok - Réduction du code boilerplate
 BCrypt - Hashage des mots de passe
 
-📦 Prérequis
+## 📦 Prérequis
 Avant de commencer, assurez-vous d'avoir installé :
 
 JDK 17 ou supérieur - Télécharger ici
