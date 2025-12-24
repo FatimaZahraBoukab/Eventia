@@ -1,7 +1,7 @@
 # Eventia - Système de Gestion de Réservations d'Événements
 
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/6f2b8834-2e18-4428-98dc-53e30b6d2e6a" alt="Eventia" width="600"/>
+  <img src="https://github.com/user-attachments/assets/6f2b8834-2e18-4428-98dc-53e30b6d2e6a" alt="Eventia" width="400" height="800"/>
 </p>
 
 ## 📋 Description du Projet
