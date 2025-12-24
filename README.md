@@ -1,6 +1,7 @@
 # Eventia - Système de Gestion de Réservations d'Événements
 
-![Eventia](Eventia.png)
+<img width="942" height="2742" alt="Eventia" src="https://github.com/user-attachments/assets/6f2b8834-2e18-4428-98dc-53e30b6d2e6a" />
+
 
 ## 📋 Description du Projet
 
@@ -52,8 +53,8 @@ Avant de commencer, assurez-vous d'avoir installé :
 ### 1. Cloner le Repository
 
 ```bash
-git clone https://github.com/votre-username/eventia.git
-cd eventia
+git clone https://github.com/FatimaZahraBoukab/Eventia.git
+cd Eventia
 ```
 
 ### 2. Installer les Dépendances
@@ -114,12 +115,6 @@ mvn spring-boot:run
 
 Exécutez la classe principale `EventiaApplication.java`
 
-### Méthode 3 : Avec le fichier JAR
-
-```bash
-mvn clean package
-java -jar target/eventia-1.0.0.jar
-```
 
 ## 🌐 Accès à l'Application
 
@@ -139,71 +134,68 @@ eventia/
 │   ├── main/
 │   │   ├── java/
 │   │   │   └── com/
-│   │   │       └── eventia/
-│   │   │           └── event_reservation/
+│   │   │       └── eventmanagement/
+│   │   │           └── eventreservation/
 │   │   │               ├── config/
-│   │   │               │   ├── AuthenticationConfig.java
-│   │   │               │   └── SecurityConfig.java
+│   │   │               │   ├── SecurityConfig.java
+│   │   │               ├── controller
+│   │   │               │   └──AuthController.java
 │   │   │               ├── entity/
-│   │   │               │   ├── ConnectedUser.java
+│   │   │               │   ├── ContactMessage.java
 │   │   │               │   ├── Event.java
 │   │   │               │   ├── EventCategory.java
 │   │   │               │   ├── EventStatus.java
 │   │   │               │   ├── Reservation.java
 │   │   │               │   ├── ReservationStatus.java
-│   │   │               │   ├── User.java
-│   │   │               │   └── UserRole.java
-│   │   │               ├── exception/
-│   │   │               │   ├── BadRequestException.java
-│   │   │               │   ├── BusinessException.java
-│   │   │               │   ├── ConflictException.java
-│   │   │               │   ├── ForbiddenException.java
-│   │   │               │   ├── ResourceNotFoundException.java
-│   │   │               │   └── UnauthorizedException.java
+│   │   │               │   ├── Role.java
+│   │   │               │   └── User.java
 │   │   │               ├── repository/
+│   │   │               │   ├── ContactMessageRepository.java
 │   │   │               │   ├── EventRepository.java
 │   │   │               │   ├── ReservationRepository.java
 │   │   │               │   └── UserRepository.java
-│   │   │               ├── security/
-│   │   │               │   ├── AuthenticationService.java
-│   │   │               │   └── SecurityService.java
 │   │   │               ├── service/
+│   │   │               │   ├── ContactMessageService.java
 │   │   │               │   ├── EventService.java
 │   │   │               │   ├── ReservationService.java
 │   │   │               │   └── UserService.java
-│   │   │               ├── utils/
-│   │   │               │   └── ReservationCodeGenerator.java
 │   │   │               ├── views/
 │   │   │               │   ├── admin/
 │   │   │               │   │   ├── AdminDashboardView.java
 │   │   │               │   │   ├── AdminEventsView.java
+│   │   │               │   │   ├── AdminInboxView.java
+│   │   │               │   │   ├── AdminProfileView.java
 │   │   │               │   │   ├── AdminReservationView.java
+│   │   │               │   │   ├── AdminSidebar.java
 │   │   │               │   │   └── AdminUsersView.java
 │   │   │               │   ├── client/
 │   │   │               │   │   ├── ClientDashboardView.java
 │   │   │               │   │   ├── ClientEventsView.java
 │   │   │               │   │   ├── ClientProfileView.java
-│   │   │               │   │   └── ClientReservationView.java
+│   │   │               │   │   ├── ClientReservation.java
+│   │   │               │   │   ├── ClientSidebar.java
+│   │   │               │   │   ├── ClientSupportView.java
+│   │   │               │   │   └── ReservationFormView.java
 │   │   │               │   ├── components/
 │   │   │               │   │   ├── AboutSection.java
+│   │   │               │   │   ├── AvisSection.java
 │   │   │               │   │   ├── ContactSection.java
-│   │   │               │   │   ├── EventsCard.java
 │   │   │               │   │   ├── Footer.java
-│   │   │               │   │   ├── Header.java
-│   │   │               │   │   └── HeroSection.java
+│   │   │               │   │   ├── HeroSection.java
+│   │   │               │   │   ├── PublicHeader.java
+│   │   │               │   │   └── ServicesSection.java
 │   │   │               │   ├── organizer/
 │   │   │               │   │   ├── EventForm.java
 │   │   │               │   │   ├── OrganizerDashboardView.java
 │   │   │               │   │   ├── OrganizerEventsView.java
-│   │   │               │   │   └── OrganizerReservationsView.java
-│   │   │               │   ├── public/
-│   │   │               │   │   ├── EventDetailsView.java
-│   │   │               │   │   ├── EventsListView.java
-│   │   │               │   │   ├── LoginView.java
-│   │   │               │   │   ├── MainView.java
-│   │   │               │   │   └── RegisterView.java
-│   │   │               │   ├── EventsReservationApplication.java
-│   │   │               │   └── MainLayout.java
+│   │   │               │   │   ├── OrganizerProfileView.java
+│   │   │               │   │   ├── OrganizerReservationsView.java
+│   │   │               │   │   └── OrganizerSidebar.java
+│   │   │               │   ├── LoginView.java
+│   │   │               │   ├── MainView.java  
+│   │   │               │   ├── RegisterView.java
+│   │   │               │   └── TousEvenements.java
+│   │   │               │   
 │   │   │               └── EventsReservationApplication.java
 │   │   └── resources/
 │   │       ├── application.properties
@@ -227,13 +219,6 @@ eventia/
 - Le code de réservation est unique au format **EVT-XXXXX**
 - Le montant total est calculé automatiquement : **nombre de places × prix unitaire**
 
-## 🧪 Tests
-
-Pour exécuter les tests unitaires :
-
-```bash
-mvn test
-```
 
 ## 📊 Concepts Java Avancés Utilisés
 
@@ -253,16 +238,12 @@ Ce projet est développé dans le cadre d'un mini-projet académique - Spring Bo
 
 ## 👥 Auteur
 
-**Votre Nom** - Développement complet du système de gestion de réservations d'événements
+**BOUKAB fatima Zahra** - Développement complet du système de gestion de réservations d'événements
 
 ## 📞 Contact
 
 Pour toute question ou suggestion :
-- Email : votre.email@example.com
-- GitHub : [@votre-username](https://github.com/votre-username)
+- Email : fatimazahraboukab9@gmail.com
+          boukab.fatimazahra@etu.uae.ac.ma
+- GitHub : [@FatimaZahraBoukab](https://github.com/FatimaZahraBoukab)
 
----
-
-**Date de livraison** : 31/12/2025  
-**Technologies** : Spring Boot 3.x + Vaadin 24.x  
-**Version** : 1.0.0
