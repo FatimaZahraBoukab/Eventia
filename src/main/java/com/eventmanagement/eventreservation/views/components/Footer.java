@@ -354,7 +354,7 @@ public class Footer extends Div {
             .set("border-top", "1px solid #333")
             .set("margin-top", "40px");
         
-        Span text = new Span("© 2024 Eventia. Tous droits réservés.");
+        Span text = new Span("© 2025 Eventia. Tous droits réservés.");
         text.getStyle()
             .set("color", "#777")
             .set("font-size", "0.85rem");
