@@ -71,25 +71,51 @@ La base de données H2 est configurée en mode embedded et s'initialise automati
 ### Configuration dans `application.properties`
 
 ```properties
-# Configuration H2 Database
-spring.datasource.url=jdbc:h2:mem:eventiadb
+# ===================================
+# CONFIGURATION BASE DE DONNÉES H2 PERSISTANTE
+# ===================================
+
+# URL de la base de données
+spring.datasource.url=jdbc:h2:file:./data/eventiadb;DB_CLOSE_ON_EXIT=FALSE;AUTO_RECONNECT=TRUE
 spring.datasource.driverClassName=org.h2.Driver
 spring.datasource.username=sa
 spring.datasource.password=
 
-# Configuration JPA/Hibernate
-spring.jpa.database-platform=org.hibernate.dialect.H2Dialect
-spring.jpa.hibernate.ddl-auto=create-drop
+# Hibernate ne crée PAS les tables (c'est schema.sql qui le fait)
+spring.jpa.hibernate.ddl-auto=none
 spring.jpa.show-sql=true
-spring.jpa.properties.hibernate.format_sql=true
 
-# Console H2 (pour le développement)
+# Spring exécutera schema.sql puis data.sql
+spring.sql.init.mode=always
+
+# Console H2
 spring.h2.console.enabled=true
 spring.h2.console.path=/h2-console
 
-# Initialisation des données
-spring.jpa.defer-datasource-initialization=true
-spring.sql.init.mode=always
+# ===================================
+# CONFIGURATION VAADIN
+# ===================================
+vaadin.launch-browser=false
+
+# ===================================
+# CONFIGURATION SERVEUR
+# ===================================
+server.port=8080
+server.error.include-message=always
+
+# ===================================
+# CONFIGURATION LOGGING
+# ===================================
+logging.level.com.eventmanagement.eventreservation=DEBUG
+logging.level.org.hibernate.SQL=DEBUG
+logging.level.org.hibernate.type.descriptor.sql.BasicBinder=TRACE
+
+# Configuration pour supporter les grandes images (upload)
+spring.servlet.multipart.max-file-size=10MB
+spring.servlet.multipart.max-request-size=10MB
+
+# Configuration pour éviter les timeouts
+spring.mvc.async.request-timeout=60000
 ```
 
 ### Génération du Script SQL
@@ -106,15 +132,27 @@ Le fichier `schema.sql` sera automatiquement généré à la racine du projet au
 
 ## ▶️ Instructions de Lancement
 
-### Méthode 1 : Avec Maven
+### Avec Maven
 
 ```bash
 mvn spring-boot:run
 ```
+## 🔐 Comptes de Test
 
-### Méthode 2 : Depuis votre IDE
+Pour tester l'application, utilisez les comptes suivants :
 
-Exécutez la classe principale `EventiaApplication.java`
+### Administrateur
+- **Email** : admin@eventia.com
+- **Mot de passe** : admin1234
+
+### Organisateurs
+- **Email** : marie@eventia.com | **Mot de passe** : organizer1234
+
+
+### Clients
+- **Email** : fatimazahraboukab9@gmail.com | **Mot de passe** : fatima.12345
+
+
 
 
 ## 🌐 Accès à l'Application
